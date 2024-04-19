@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='socialmediaextractor',
-    version='0.3',
+    version='0.4',
     description='A library to extract social media links from websites',
     long_description = '''Usage
 ========================================
