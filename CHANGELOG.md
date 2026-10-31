@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-31
+
+### Fixed
+- A single malformed or deeply nested JSON-LD block raised `RecursionError` and aborted
+  extraction for the whole page. Such blocks are now skipped (logged at `DEBUG`), and the
+  `sameAs` walk is iterative.
+- The CLI validates `--platform` names before fetching anything and exits with code 2 and a
+  clear message, instead of reporting the same error once per URL.
+
+### Changed
+- `extract_all_social_links` reports each account once: links that differ only in scheme,
+  `www.`/`m.` subdomain, alias domain (`twitter.com` vs `x.com`), letter case, trailing slash
+  or `utm_*` parameters are collapsed, keeping the first spelling on the page.
+- Stricter linting (ruff `C4`, `PTH`, `RET`, `PIE`) and a mypy configuration; the package
+  type-checks cleanly.
+- CI runs ruff, ruff format, mypy and pytest with a 100% coverage gate on Python 3.10 to 3.13
+  using `uv`, with concurrency cancellation. Added CodeQL analysis and pre-commit hooks.
+- README rewritten: architecture diagram, configuration and API tables, limitations.
+
+### Added
+- Offline examples: `quickstart.py`, `enrich_leads_csv.py`, `audit_brand_links.py`,
+  `classify_url_list.py`, with bundled sample pages.
+
 ## [1.0.0] - 2026-10-31
 
 ### Fixed

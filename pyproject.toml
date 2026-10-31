@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "socialmediaextractor"
-version = "1.0.0"
+version = "1.1.0"
 description = "Extract a website's social media profile links (X/Twitter, LinkedIn, Instagram, Facebook, YouTube, TikTok, GitHub, Threads, Bluesky), skipping share buttons."
 readme = "README.md"
 requires-python = ">=3.10"

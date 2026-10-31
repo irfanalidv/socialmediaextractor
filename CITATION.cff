@@ -5,7 +5,7 @@ abstract: "Extract a website's social media profile links, skipping share button
 authors:
   - family-names: Ali
     given-names: Irfan
-version: "1.0.0"
+version: "1.1.0"
 date-released: "2026-10-31"
 license: MIT
 repository-code: "https://github.com/irfanalidv/socialmediaextractor"
