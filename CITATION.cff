@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "socialmediaextractor"
+abstract: "Extract a website's social media profile links, skipping share buttons."
+authors:
+  - family-names: Ali
+    given-names: Irfan
+version: "1.0.0"
+date-released: "2026-10-31"
+license: MIT
+repository-code: "https://github.com/irfanalidv/socialmediaextractor"
+url: "https://pypi.org/project/socialmediaextractor/"

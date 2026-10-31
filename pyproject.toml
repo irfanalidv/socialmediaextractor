@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=77.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "socialmediaextractor"
+version = "1.0.0"
+description = "Extract a website's social media profile links (X/Twitter, LinkedIn, Instagram, Facebook, YouTube, TikTok, GitHub, Threads, Bluesky), skipping share buttons."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Irfan Ali", email = "irfanali29@hotmail.com" }]
+keywords = [
+    "social-media",
+    "social-links",
+    "link-extraction",
+    "web-scraping",
+    "scraper",
+    "lead-generation",
+    "osint",
+    "twitter",
+    "x",
+    "linkedin",
+    "instagram",
+    "facebook",
+    "youtube",
+    "tiktok",
+    "github",
+    "threads",
+    "bluesky",
+    "beautifulsoup",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+dependencies = [
+    "requests>=2.28",
+    "beautifulsoup4>=4.11",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "ruff>=0.6",
+    "build>=1.0",
+    "twine>=5.0",
+]
+
+[project.scripts]
+socialmediaextractor = "socialmediaextractor.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/irfanalidv/socialmediaextractor"
+Documentation = "https://github.com/irfanalidv/socialmediaextractor#readme"
+Repository = "https://github.com/irfanalidv/socialmediaextractor"
+Issues = "https://github.com/irfanalidv/socialmediaextractor/issues"
+Changelog = "https://github.com/irfanalidv/socialmediaextractor/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+include = ["socialmediaextractor*"]
+
+[tool.setuptools.package-data]
+socialmediaextractor = ["py.typed"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--doctest-modules socialmediaextractor tests"
