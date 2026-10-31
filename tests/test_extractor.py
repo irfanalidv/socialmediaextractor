@@ -204,3 +204,51 @@ def test_cli_multiple_urls_with_error(monkeypatch, capsys):
     assert data["https://bad.example"] is None
     assert data["https://acme.example"]["GitHub"] == "https://github.com/acme-corp"
     assert "nope" in captured.err
+
+
+def test_deeply_nested_or_broken_jsonld_does_not_crash(caplog):
+    deep = "[" * 100_000 + "]" * 100_000
+    html = (
+        f'<script type="application/ld+json">{deep}</script>'
+        '<script type="application/ld+json">{not json</script>'
+        '<a href="https://x.com/acme">x</a>'
+    )
+    with caplog.at_level("DEBUG", logger="socialmediaextractor.extractor"):
+        assert sme.extract_social_links_from_html(html)["Twitter"] == "https://x.com/acme"
+    assert "unparsable JSON-LD" in caplog.text
+
+
+def test_deep_but_valid_jsonld_same_as_is_found():
+    doc = '{"a":' * 500 + '{"sameAs": ["https://github.com/deep"]}' + "}" * 500
+    html = f'<script type="application/ld+json">{doc}</script>'
+    assert sme.extract_social_links_from_html(html)["GitHub"] == "https://github.com/deep"
+
+
+def test_duplicate_profile_spellings_are_collapsed():
+    html = (
+        '<a href="https://x.com/Acme">a</a>'
+        '<a href="https://twitter.com/acme/">b</a>'
+        '<a href="http://www.x.com/acme?utm_source=footer">c</a>'
+        '<a href="https://x.com/acme_jobs">d</a>'
+        '<a href="https://www.facebook.com/profile.php?id=1">e</a>'
+        '<a href="https://m.facebook.com/profile.php?id=2">f</a>'
+    )
+    result = sme.extract_all_social_links(html, platforms=["X", "Facebook"])
+    assert result == {
+        "Twitter": ["https://x.com/Acme", "https://x.com/acme_jobs"],
+        "Facebook": [
+            "https://www.facebook.com/profile.php?id=1",
+            "https://m.facebook.com/profile.php?id=2",
+        ],
+    }
+
+
+def test_cli_rejects_unknown_platform_before_fetching(monkeypatch, capsys):
+    def fail(*a, **k):
+        raise AssertionError("should not fetch")
+
+    monkeypatch.setattr(extractor.requests, "get", fail)
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(["https://acme.example", "-p", "MySpace"])
+    assert excinfo.value.code == 2
+    assert "unknown platform" in capsys.readouterr().err

@@ -11,6 +11,7 @@ from . import __version__
 from .extractor import (
     PLATFORMS,
     SocialMediaExtractorError,
+    _select,
     extract_all_social_links,
     extract_social_links_from_html,
     fetch_html,
@@ -37,6 +38,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--timeout", type=float, default=15.0, help="seconds (default: 15)")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     args = parser.parse_args(argv)
+    try:
+        _select(args.platforms)
+    except ValueError as exc:
+        parser.error(str(exc))
 
     results: dict[str, object] = {}
     status = 0

@@ -9,11 +9,12 @@ links.
 from __future__ import annotations
 
 import json
+import logging
 import re
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from typing import Any
-from urllib.parse import urljoin, urlparse
+from urllib.parse import parse_qsl, urlencode, urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -38,6 +39,9 @@ DEFAULT_HEADERS: dict[str, str] = {
     ),
     "Accept": "text/html,application/xhtml+xml",
 }
+
+
+logger = logging.getLogger(__name__)
 
 
 class SocialMediaExtractorError(RuntimeError):
@@ -244,18 +248,34 @@ def _normalize(href: str, base_url: str | None) -> str | None:
 
 
 def _same_as(node: Any) -> Iterator[str]:
-    if isinstance(node, dict):
-        value = node.get("sameAs")
-        if isinstance(value, str):
-            yield value
-        elif isinstance(value, list):
-            yield from (v for v in value if isinstance(v, str))
-        for child in node.values():
-            if isinstance(child, (dict, list)):
-                yield from _same_as(child)
-    elif isinstance(node, list):
-        for child in node:
-            yield from _same_as(child)
+    """Yield every string ``sameAs`` value in a JSON-LD document, depth-first.
+
+    Iterative (explicit stack) so deeply nested documents cannot exhaust the call stack.
+    """
+    stack: list[Any] = [node]
+    while stack:
+        current = stack.pop()
+        if isinstance(current, dict):
+            value = current.get("sameAs")
+            if isinstance(value, str):
+                yield value
+            elif isinstance(value, list):
+                yield from (v for v in value if isinstance(v, str))
+            children = [c for c in current.values() if isinstance(c, (dict, list))]
+            stack.extend(reversed(children))
+        elif isinstance(current, list):
+            stack.extend(reversed([c for c in current if isinstance(c, (dict, list))]))
+
+
+def _dedupe_key(platform: Platform, url: str) -> tuple[str, str, str]:
+    """Identity of a profile link: same platform, same path (case/trailing slash
+    insensitive) and same query minus ``utm_*`` tracking parameters. The host is ignored
+    so ``x.com/acme`` and ``twitter.com/acme`` (or ``www.`` vs bare) count once."""
+    parsed = urlparse(url)
+    query = urlencode(
+        [(k, v) for k, v in parse_qsl(parsed.query) if not k.lower().startswith("utm_")]
+    )
+    return platform.name, parsed.path.rstrip("/").lower(), query
 
 
 def iter_candidate_urls(html: str, base_url: str | None = None) -> Iterator[str]:
@@ -268,7 +288,8 @@ def iter_candidate_urls(html: str, base_url: str | None = None) -> Iterator[str]
     for script in soup.find_all("script", type="application/ld+json"):
         try:
             data = json.loads(script.string or "")
-        except json.JSONDecodeError:
+        except (ValueError, RecursionError) as exc:  # JSONDecodeError is a ValueError
+            logger.debug("skipping unparsable JSON-LD block: %s", exc)
             continue
         for value in _same_as(data):
             url = _normalize(value, base_url)
@@ -302,13 +323,21 @@ def extract_all_social_links(
     *,
     platforms: Iterable[str] | None = None,
 ) -> dict[str, list[str]]:
-    """Return every distinct profile link per platform, in page order."""
+    """Return every distinct profile link per platform, in page order.
+
+    Links that point at the same profile (differing only in scheme, ``www.``/``m.``
+    subdomain, platform alias domain, letter case, trailing slash or ``utm_*`` parameters)
+    are reported once, using the first spelling found on the page.
+    """
     selected = _select(platforms)
     found: dict[str, list[str]] = {p.name: [] for p in selected}
+    seen: set[tuple[str, str, str]] = set()
     for url in iter_candidate_urls(html, base_url):
         for platform in selected:
             if platform.matches(url):
-                if url not in found[platform.name]:
+                key = _dedupe_key(platform, url)
+                if key not in seen:
+                    seen.add(key)
                     found[platform.name].append(url)
                 break
     return found
