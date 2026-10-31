@@ -1,0 +1,11 @@
+https://x.com/python
+https://twitter.com/intent/tweet?text=hello
+https://www.linkedin.com/in/someone/
+https://www.linkedin.com/feed/
+https://github.com/psf/requests
+https://github.com/psf/requests/issues/1
+https://www.youtube.com/@PyCon
+https://youtu.be/abc
+https://bsky.app/profile/python.org
+https://www.facebook.com/sharer/sharer.php?u=https://example.com
+https://example.com/blog/post
